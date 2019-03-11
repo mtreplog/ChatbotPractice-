@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import json
 import requests
 from KEY import API_key
+import imghdr
+import googlemaps
 
 app = Flask(__name__)
 port = '5000'
@@ -17,17 +19,22 @@ def index():
     final = []
     for restaurant in restaurants:
         final.append(restaurant['name'])
+    picture_reference = t.json()['results'][0]['photos'][0]['photo_reference']
+    photo_request = requests.get(
+        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference='+picture_reference+'&key='+API_key)
+    query = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=' + \
+        picture_reference+'&key='+API_key
+    photo_type = imghdr.what("", photo_request.content)
+    # path = "C:\Users\I506992\Desktop\" + "static\ "
+    #photo_name = path.trim() + query + '.' + photo_type
 
-    new = (t.json()['results'][0]['photos'][0]['html_attributions'])
-    k = str(new)
-    mapquest = k.find('href')
-    mapping = k[mapquest+5:]
-
+    # with open(photo_name, "wb") as photo:
+    # photo.write(photo_request.content)
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': 'In %s you can eat at %s or %s and finally %s.' % (location, str(final[0]), str(final[1]), str(final[2]))
+            'content': photo_type
         }]
 
 
