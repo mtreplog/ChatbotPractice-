@@ -3,7 +3,7 @@ import json
 import requests
 from KEY import API_key
 import googlemaps
-import os
+import operator
 import sapcai
 
 
@@ -18,34 +18,27 @@ gmaps = googlemaps.Client(key=API_key)
 def index():
     data = json.loads(request.get_data())
     location = data['conversation']['memory']['location']['raw']
+    type = str(data['conversation']['memory']['type']['raw'])
     t = requests.get(
         'https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+'+location + '&key='+API_key)
-    restaurants = t.json()['results'][:4]
-    final = []
+    restaurants = t.json()['results']
+    final = {}
     for restaurant in restaurants:
-        final.append(restaurant['name'])
-    picture_reference = t.json()['results'][0]['photos'][0]['photo_reference']
-    raw_image_data = gmaps.places_photo(
-        photo_reference=picture_reference, max_height=40, max_width=40)
-
-    f = open("googleimage.png", "wb")
-
-    for i in raw_image_data:
-        if i:
-            f.write(i)
-
-    f.close()
-    # path = "C:\Users\I506992\Desktop\" + "static\ "
-    #photo_name = path.trim() + query + '.' + photo_type
-
-    # with open(photo_name, "wb") as photo:
-    # photo.write(photo_request.content)
-
+        if restaurant["opening_hours"]["open_now"] is True:
+            for x in restaurant["types"]:
+                if x == type.lower():
+                    final[restaurant['name']] = restaurant['rating']
+        else:
+            final["none"] = 3.3
+    march = sorted(final.items(), key=operator.itemgetter(1))
+    madness = march[-1][0]
+    score = march[-1][1]
+    number = len(march)
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': "{}\googleimage.png".format(os.getcwd()),
+            'content': "We've found %s locations currently fitting your criteria.\nOur highest rated restaurant in the area was %s with a rating of %s. \n" % (str(number), str(madness), str(score))
         }]
 
 
