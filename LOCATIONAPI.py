@@ -33,12 +33,44 @@ def index():
     march = sorted(final.items(), key=operator.itemgetter(1))
     madness = march[-1][0]
     score = march[-1][1]
+    madnessone = march[-2][0]
+    scoreone = march[-2][1]
+    madnesstwo = march[-3][0]
+    scoretwo = march[-3][1]
+
     number = len(march)
     return jsonify(
         status=200,
         replies=[{
-            'type': 'text',
-            'content': "We've found %s locations currently fitting your criteria.\nOur highest rated restaurant in the area was %s with a rating of %s. \n" % (str(number), str(madness), str(score))
+
+            "type": "buttons",
+            "content": {
+                    "title":  "We've found %s locations currently open that fit your criteria.\nOur highest rated restaurant in the area was '%s' with a rating of  %s/5. \n" % (str(number), str(madness), str(score)),
+                    "buttons": [
+                        {
+                            "title": str(madness),
+                            "type": "web_url",
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madness) + "&find_loc=" + str(location)+"&ns=1"
+                        },
+                        {
+                            "title": str(madnessone),
+                            "type": "web_url",
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madnessone) + "&find_loc=" + str(location)+"&ns=1"
+                        },
+                        {
+                            "title": str(madnesstwo),
+                            "type": "web_url",
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madnesstwo) + "&find_loc=" + str(location)+"&ns=1"
+                        },
+
+
+                    ],
+
+            }
+
+
+
+
         }]
 
 
