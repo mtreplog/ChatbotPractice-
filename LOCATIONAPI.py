@@ -50,17 +50,17 @@ def index():
                         {
                             "title": str(madness),
                             "type": "web_url",
-                            "value": "https://www.yelp.com/search?find_desc=" + str(madness) + "&find_loc=" + str(location)+"&ns=1"
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madness.strip().replace(' ', "+")) + "&find_loc=" + str(location)+"&ns=1"
                         },
                         {
                             "title": str(madnessone),
                             "type": "web_url",
-                            "value": "https://www.yelp.com/search?find_desc=" + str(madnessone) + "&find_loc=" + str(location)+"&ns=1"
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madnessone.strip().replace(' ', "+")) + "&find_loc=" + str(location)+"&ns=1"
                         },
                         {
                             "title": str(madnesstwo),
                             "type": "web_url",
-                            "value": "https://www.yelp.com/search?find_desc=" + str(madnesstwo) + "&find_loc=" + str(location)+"&ns=1"
+                            "value": "https://www.yelp.com/search?find_desc=" + str(madnesstwo.strip().replace(' ', "+")) + "&find_loc=" + str(location)+"&ns=1"
                         },
 
 
