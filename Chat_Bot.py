@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import json
 import requests
+import math
 
 app = Flask(__name__)
 port = '5000'
@@ -17,38 +18,80 @@ def index():
     actuals = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
 
-    planned = requests.get(https: // cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/GetPlanningByOrgunit)
+    planned = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/GetPlanningByOrgunit')
 
-    test = ''
-    new = json.loads(actuals.text)
-    TargetList = []
+    actualsjson = json.loads(actuals.text)
+    plannedjson = json.loads(planned.text)
+
+    PercentTraveled = 0
+    PercentICO = 0
+    PercentThirdParty = 0
+    Actuallist = []
+    Planninglist = []
+    travelplanned = 0
+    ICOplanned = 0
+    ThirdPartyplanned = 0
     Travel = 0
     ICO = 0
     ThirdParty = 0
-    for i in new:
+    for i in actualsjson:
         try:
             if i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] == Org_Dict[org_unit]:
-                TargetList.append(i)
+                Actuallist.append(i)
         except KeyError:
             pass
 
-    for x in TargetList:
+    for x in Actuallist:
         if x['CostGroups'][0]['CostGroup'] == '3rd Party':
-            ThirdParty += x['Budget_Actuals']
+            ThirdParty += math.floor(x['Budget_Actuals'])
 
-    for x in TargetList:
-        if x['CostGroups'][0]['CostGroup'] == 'Travel':
-            Travel += x['Budget_Actuals']
+    for k in Actuallist:
+        if k['CostGroups'][0]['CostGroup'] == 'Travel':
+            Travel += math.floor(x['Budget_Actuals'])
 
-    for x in TargetList:
-        if x['CostGroups'][0]['CostGroup'] == 'ICO':
-            ICO += x['Budget_Actuals']
+    for l in Actuallist:
+        if l['CostGroups'][0]['CostGroup'] == 'ICO':
+            ICO += math.floor(x['Budget_Actuals'])
+
+    for m in plannedjson:
+        try:
+            if m['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] == Org_Dict[org_unit]:
+                Planninglist.append(m)
+        except KeyError:
+            pass
+    for z in Planninglist:
+        if z['CostGroup']['CostGroup'] == '3rd Party':
+            ThirdPartyplanned += math.floor(z['Sum'])
+
+    for q in Planninglist:
+        if q['CostGroup']['CostGroup'] == 'Travel':
+            travelplanned += math.floor(q['Sum'])
+
+    for p in Planninglist:
+        if p['CostGroup']['CostGroup'] == 'ICO':
+            ICOplanned += math.floor(p['Sum'])
+
+    try:
+        PercentTraveled = Travel/travelplanned * 100
+    except ZeroDivisionError:
+        PercentTraveled = math.floor(0)
+
+    try:
+        PercentThirdParty = ThirdParty/ThirdPartyplanned * 100
+    except ZeroDivisionError:
+        PercentThirdParty = math.floor(0)
+
+    try:
+        PercentICO = ICO/ICOplanned * 100
+    except ZeroDivisionError:
+        PercentICO = math.floor(0)
 
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': 'Travel:\nYou have spent $%i on Travel compared to 000 planned, this is percentage of your total budget.\n\nThird Party:\nYou have spent $%i on 3rd Party Consultants compared to 000 expected, this is pecentage of your total budget.\n\nICO:\nYou have spent $%i on ICO compared to 000 expected, this is percentage of your total budget.' % (Travel, ThirdParty, ICO)
+            'content': 'Travel:\nYou have spent $%s on Travel compared to $%s planned, this is %i%% of your total budget.\n\nThird Party:\nYou have spent $%s on 3rd Party Consultants compared to %s planned, this is %i%% of your total budget.\n\nICO:\nYou have spent $%s on ICO compared to $%s planned, this is %i%% of your total budget.' % ("{:,}".format(Travel), "{:,}".format(travelplanned), PercentTraveled, "{:,}".format(ThirdParty), "{:,}".format(ThirdPartyplanned), PercentThirdParty, "{:,}".format(ICO), "{:,}".format(ICOplanned), PercentICO)
         }],
         conversation={
             'memory': {'key': 'value'}
