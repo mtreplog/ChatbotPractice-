@@ -6,8 +6,8 @@ import math
 app = Flask(__name__)
 port = '5000'
 
-Org_Dict = {'cross': 'M3CIT03003', 'finance': 'M2CIT00302', 'c2r': '',
-            'g2m': '', 'sed': '', 'hr': 'M3CIT03009', 's/4': 'M3CIT04054', 'app': 'M3ITIN0206', }
+Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procurement',
+            'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications'}
 
 
 @app.route('/', methods=['POST'])
@@ -37,7 +37,7 @@ def index():
     ThirdParty = 0
     for i in actualsjson:
         try:
-            if i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] == Org_Dict[org_unit]:
+            if i['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
                 Actuallist.append(i)
         except KeyError:
             pass
@@ -56,7 +56,7 @@ def index():
 
     for m in plannedjson:
         try:
-            if m['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] == Org_Dict[org_unit]:
+            if m['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
                 Planninglist.append(m)
         except KeyError:
             pass

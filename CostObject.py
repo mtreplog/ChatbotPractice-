@@ -4,6 +4,9 @@ import json
 app = Flask(__name__)
 port = '5000'
 
+Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procurement',
+            'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications'}
+
 
 @app.route('/', methods=['POST'])
 def index():
