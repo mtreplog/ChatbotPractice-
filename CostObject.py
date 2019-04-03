@@ -8,7 +8,7 @@ Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procure
             'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications'}
 
 
-@app.route('/', methods=['POST'])
+@app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
     org_unit = data['conversation']['memory']['Org_unit']['value']
@@ -18,7 +18,7 @@ def index():
         status=200,
         replies=[{
             'type': 'text',
-            'content': str(org_unit) + ', ' + str(cost) + ', ' + str(cost_type)
+            'content': str(cost_type)
         }],
         conversation={
             'memory': {'key': 'value'}
