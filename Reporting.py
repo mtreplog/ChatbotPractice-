@@ -10,24 +10,6 @@ Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procure
             'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications'}
 
 
-@app.route('/', methods=['POST'])
-def index2():
-    data = (json.loads(request.get_data()))
-    org_unit = data['conversation']['memory']['Org_unit']['value']
-    cost = data['conversation']['memory']['number']['value']
-    cost_type = data['conversation']['memory']['costtype']['value']
-    return jsonify(
-        status=200,
-        replies=[{
-            'type': 'text',
-            'content': str(cost_type)
-        }],
-        conversation={
-            'memory': {'key': 'value'}
-        }
-    )
-
-
 @app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
@@ -37,7 +19,7 @@ def index():
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
 
     planned = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/GetPlanningByOrgunit')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning')
 
     actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
@@ -110,6 +92,24 @@ def index():
         replies=[{
             'type': 'text',
             'content': 'Travel:\nYou have spent $%s on Travel compared to $%s planned, this is %i%% of your total budget.\n\nThird Party:\nYou have spent $%s on 3rd Party Consultants compared to %s planned, this is %i%% of your total budget.\n\nICO:\nYou have spent $%s on ICO compared to $%s planned, this is %i%% of your total budget.' % ("{:,}".format(Travel), "{:,}".format(travelplanned), PercentTraveled, "{:,}".format(ThirdParty), "{:,}".format(ThirdPartyplanned), PercentThirdParty, "{:,}".format(ICO), "{:,}".format(ICOplanned), PercentICO)
+        }],
+        conversation={
+            'memory': {'key': 'value'}
+        }
+    )
+
+
+@app.route('/', methods=['POST'])
+def index2():
+    data = (json.loads(request.get_data()))
+    org_unit = data['conversation']['memory']['Org_unit']['value']
+    cost = data['conversation']['memory']['number']['value']
+    cost_type = data['conversation']['memory']['costtype']['value']
+    return jsonify(
+        status=200,
+        replies=[{
+            'type': 'text',
+            'content': str(cost_type)
         }],
         conversation={
             'memory': {'key': 'value'}
