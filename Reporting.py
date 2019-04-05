@@ -16,10 +16,10 @@ def index():
     org_unit = str(data['conversation']['memory']['Org_Unit']['raw']).lower()
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
 
     planned = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
 
     actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
