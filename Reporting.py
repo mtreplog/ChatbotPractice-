@@ -16,10 +16,10 @@ def index():
     org_unit = str(data['conversation']['memory']['Org_Unit']['raw']).lower()
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=10)
 
     planned = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=10)
 
     actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
@@ -102,14 +102,86 @@ def index():
 @app.route('/', methods=['POST'])
 def index2():
     data = (json.loads(request.get_data()))
-    org_unit = data['conversation']['memory']['Org_unit']['value']
+    org_unit = data['conversation']['memory']['Org_unit']['value'].lower()
     cost = data['conversation']['memory']['number']['value']
-    cost_type = data['conversation']['memory']['costtype']['value']
+    cost_group = data['conversation']['memory']['costtype']['value'].lower()
+    date = data['conversation']['memory']['date']['value']
+    userid = data['conversation']['memory']['userid']['value']
+    name = data['conversation']['memory']['person']['fullname']
+    headers = {'content-type': 'application/json'}
+    cleanDU = Org_Dict[org_unit]
+    cleancost = ''.join(e for e in cost if e.isanum())
+    cleandate = date[:3].title()
+    cleanid = userid.title()
+    cleanname = name.title()
+    cleantype = ''
+    if cost_group[0] == 't':
+        cleantype = 'Travel'
+    elif cost_group[0] == 'i':
+        cleantype = 'ICO'
+    else:
+        cleantype = '3rd Party'
+
+    payload = {
+        "Jan": 0,
+        "JanCom": "string",
+        "Feb": 0,
+        "FebCom": "string",
+        "Mar": 0,
+        "MarCom": "string",
+        "Apr": 0,
+        "AprCom": "string",
+        "May": 0,
+        "MayCom": "string",
+        "Jun": 0,
+        "JunCom": "string",
+        "Jul": 0,
+        "JulCom": "string",
+        "Aug": 0,
+        "AugCom": "string",
+        "Sep": 0,
+        "SepCom": "string",
+        "Oct": 0,
+        "OctCom": "string",
+        "Nov": 0,
+        "NovCom": "string",
+        "Dec": 0,
+        "DecCom": "string",
+        "CostCenter": {
+            "CCID": "string",
+            "Name": "string",
+            "DeliveryUnit": {
+                "DU": "string",
+                "OrganizationalUnit": {
+                    "OU": "string",
+                    "Node": "string"
+                }
+            }
+        },
+        "CostGroup": {
+            "CostGroup": "string"
+        },
+        "CostType": {
+            "CostType": "string"
+        },
+        "Resource": {
+            "Name": "string",
+            "UserID": "string",
+            "Email": "string"
+        }
+    }
+    payload[cleandate] = cleancost
+    payload['Resource']['Name'] = cleanname
+    payload['Resource']['UserID'] = cleanid
+    payload['CostCenter']['DeliveryUnit']['DU'] = cleanDU
+    payload['CostType']['CostType'] = cleantype
+    post = requests.post(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': str(cost_type)
+            'content': 'Confirmed, Thank you for using Cost App Chat Bot! Hope it did not...cost....you to much time ;)'
         }],
         conversation={
             'memory': {'key': 'value'}
