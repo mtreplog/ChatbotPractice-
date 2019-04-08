@@ -7,10 +7,16 @@ app = Flask(__name__)
 port = '5000'
 
 Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procurement',
-            'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications', 'dummy': 'Dummy'}
+            'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'corpfin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications', 'dummy': 'Dummy'}
 
-Org_Unit = {1: 'IT Contract to Revenue', 2: 'Cross IT & Operations', 3: 'IT Human Resources', 4: 'IT Corporate Finance',
+Del_dict = {1: 'IT Contract to Revenue', 2: 'Cross IT & Operations', 3: 'IT Human Resources', 4: 'IT Corporate Finance',
             5: 'IT Services, Entitlement & Delivery', 6: 'IT Application Services Mgmt', 7: 'IT S/4 HANA Program Office', 8: 'IT Go-To-Market Services'}
+Node_dict = {1: 'M3CIT03008', 2: 'M3CIT03003', 3: 'M3CIT03009', 4: 'M2CIT00302',
+             5: 'M3CIT03010', 6: 'M3ITIN0206', 7: 'M3CIT04054', 8: 'M2CIT00312'}
+Cost_Center_ID = {'oss': '108611700', 'hr2': '115000402',
+                  'pr': '101035030', 'iam': '101000452', 's/4': '101004059', 'app': '108004071'}
+Cost_Center_Dict = {'oss': 'IT Ops & SharServ US', 'hr2': 'IT HR II SGD',
+                    'pr': 'IT Procurement SE', 'iam': 'M3CIT03003', 's/4': 'IT S/4 Hana PO SE', 'app': 'IT AppServ Mgmt US'}
 
 
 @app.route('/mike', methods=['POST'])
@@ -119,6 +125,7 @@ def index2():
     cleanid = userid.title()
     cleanname = name.title()
     cleantype = ''
+    org_org = 0
     if cost_group[:2] == 'tr':
         cleantype = 'Travel'
     elif cost_group[0] == 'i':
@@ -174,11 +181,36 @@ def index2():
             "Email": "string"
         }
     }
+    if org_unit == 'oss':
+        org_org = 2
+    elif org_unit == 'hr2':
+        org_org = 3
+    elif org_unit == 'pr':
+        org_org = 4
+    elif org_unit == 'iam':
+        org_org = 2
+    elif org_unit == 's/4':
+        org_org = 7
+    elif org_unit == 'cross':
+        org_org = 2
+    elif org_unit == 'hr':
+        org_org = 3
+    elif org_unit == 'app':
+        org_org = 6
+    elif org_unit == 'cont':
+        org_org = 4
+    elif org_unit == 'corpfin':
+        org_org = 4
+    elif org_unit == 'shared':
+        org_org = 2
+    elif org_unit == 'dummy':
+        org_org = 2
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Del_dict[org_org]
     payload[cleandate] = cleancost
     payload['Resource']['Name'] = cleanname
     payload['Resource']['UserID'] = cleanid
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = cleanDU
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = 'M3456'
+    payload['CostCenter']['DeliveryUnit']['DeliveryUnit']['DU'] = cleanDU
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = Node_dict[org_org]
     payload['CostGroup']['CostGroup'] = cleantype
     post = requests.post(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
