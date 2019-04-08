@@ -9,6 +9,9 @@ port = '5000'
 Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procurement',
             'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'CorpFin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications', 'dummy': 'Dummy'}
 
+Org_Unit = {1: 'IT Contract to Revenue', 2: 'Cross IT & Operations', 3: 'IT Human Resources', 4: 'IT Corporate Finance',
+            5: 'IT Services, Entitlement & Delivery', 6: 'IT Application Services Mgmt', 7: 'IT S/4 HANA Program Office', 8: 'IT Go-To-Market Services'}
+
 
 @app.route('/mike', methods=['POST'])
 def index():
@@ -110,12 +113,13 @@ def index2():
     name = data['conversation']['memory']['person']['fullname']
     headers = {'content-type': 'application/json'}
     cleanDU = Org_Dict[org_unit]
-    cleancost = ''.join(e for e in cost if e.isanum())
+    newcost = ''.join(e for e in cost if e.isalnum())
+    cleancost = int(newcost)
     cleandate = date[:3].title()
     cleanid = userid.title()
     cleanname = name.title()
     cleantype = ''
-    if cost_group[0] == 't':
+    if cost_group[:2] == 'tr':
         cleantype = 'Travel'
     elif cost_group[0] == 'i':
         cleantype = 'ICO'
@@ -173,15 +177,16 @@ def index2():
     payload[cleandate] = cleancost
     payload['Resource']['Name'] = cleanname
     payload['Resource']['UserID'] = cleanid
-    payload['CostCenter']['DeliveryUnit']['DU'] = cleanDU
-    payload['CostType']['CostType'] = cleantype
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = cleanDU
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = 'M3456'
+    payload['CostGroup']['CostGroup'] = cleantype
     post = requests.post(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': 'Confirmed, Thank you for using Cost App Chat Bot! Hope it did not...cost....you to much time ;)'
+            'content': str(payload)
         }],
         conversation={
             'memory': {'key': 'value'}
