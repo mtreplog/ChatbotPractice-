@@ -6,17 +6,8 @@ import math
 app = Flask(__name__)
 port = '5000'
 
-Org_Dict = {'oss': 'Operations & Shared Service', 'hr2': 'HR II', 'pr': 'Procurement',
-            'iam': 'Identity & Accessmanagement', 's/4': 'IT S/4 HANA Program Office', 'app': 'IT Application Services Mgmt', 'cross': 'Cross IT & Operations Management', 'hr': 'HR I', 'cont': 'Controlling', 'corpfin': 'Coprporate Finance Mgmt', 'shared': 'Shared IT Applications', 'dummy': 'Dummy'}
-
-Del_dict = {1: 'IT Contract to Revenue', 2: 'Cross IT & Operations', 3: 'IT Human Resources', 4: 'IT Corporate Finance',
-            5: 'IT Services, Entitlement & Delivery', 6: 'IT Application Services Mgmt', 7: 'IT S/4 HANA Program Office', 8: 'IT Go-To-Market Services', 9: 'Dummy'}
-Node_dict = {1: 'M3CIT03008', 2: 'M3CIT03003', 3: 'M3CIT03009', 4: 'M2CIT00302',
-             5: 'M3CIT03010', 6: 'M3ITIN0206', 7: 'M3CIT04054', 8: 'M2CIT00312', 9: 'M3456'}
-Cost_Center_ID = {'oss': '108611700', 'hr2': '115000402',
-                  'pr': '101035030', 'iam': '101000452', 's/4': '101004059', 'app': '108004071', 'cross': '108004036', 'hr': '101004080', 'cont': '181010088', 'corpfin': '101030010', 'shared': '176223020', 'dummy': '11238769'}
-Cost_Center_Dict = {'oss': 'IT Ops & SharServ US', 'hr2': 'IT HR II SGD',
-                    'pr': 'IT Procurement SE', 'iam': 'M3CIT03003', 's/4': 'IT S/4 Hana PO SE', 'app': 'IT AppServ Mgmt US', 'cross': 'Cross IT & Ops Mg US', 'hr': 'IT HR I SE', 'cont': 'IT Controlling ROM', 'corpfin': 'IT Fin Serv Mgmt SE', 'shared': 'SharIT App IND', 'dummy': 'Dummy IT APP'}
+DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
+           '2Contract to Revenue', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
 
 
 @app.route('/mike', methods=['POST'])
@@ -25,10 +16,10 @@ def index():
     org_unit = str(data['conversation']['memory']['Org_Unit']['raw']).lower()
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=10)
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
 
     planned = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=10)
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
 
     actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
@@ -181,30 +172,7 @@ def index2():
             "Email": "string"
         }
     }
-    if org_unit == 'oss':
-        org_org = 2
-    elif org_unit == 'hr2':
-        org_org = 3
-    elif org_unit == 'pr':
-        org_org = 4
-    elif org_unit == 'iam':
-        org_org = 2
-    elif org_unit == 's/4':
-        org_org = 7
-    elif org_unit == 'cross':
-        org_org = 2
-    elif org_unit == 'hr':
-        org_org = 3
-    elif org_unit == 'app':
-        org_org = 6
-    elif org_unit == 'cont':
-        org_org = 4
-    elif org_unit == 'corpfin':
-        org_org = 4
-    elif org_unit == 'shared':
-        org_org = 2
-    elif org_unit == 'dummy':
-        org_org = 9
+
     payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Del_dict[org_org]
     payload[cleandate] = cleancost
     payload['Resource']['Name'] = cleanname
@@ -221,6 +189,50 @@ def index2():
         replies=[{
             'type': 'text',
             'content': str(payload)
+        }],
+        conversation={
+            'memory': {'key': 'value'}
+        }
+    )
+
+
+@app.route('/DU', methods=['POST'])
+def costcenter():
+    placeholder = ""
+    Org_list = []
+
+    data = (json.loads(request.get_data()))
+    Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
+    if Org_unit == 'IT Go-to-Market Services':
+        placeholder = '1'
+    elif Org_unit == 'IT Contract to Revenue':
+        placeholder = '2'
+    elif Org_unit == 'IT Application Architecture':
+        placeholder = '3'
+    elif Org_unit == 'IT Services Entitlement & Delivery':
+        placeholder = '4'
+    elif Org_unit == 'IT Core Value Chain Services Mgmt':
+        placeholder = '5'
+    elif Org_unit == 'IT S/4 HANA Program Office':
+        placeholder = '6'
+    elif Org_unit == 'IT Application Services Mgmt':
+        placeholder = '7'
+    elif Org_unit == 'IT Human Resources':
+        placeholder = '8'
+    elif Org_unit == 'Cross IT & Operations':
+        placeholder = '9'
+    elif Org_unit == 'IT Corporate Finance':
+        placeholder = 'z'
+
+    for i in DU_dict:
+        if i[0] == placeholder:
+            Org_list.append(i[1:])
+
+    return jsonify(
+        status=200,
+        replies=[{
+            'type': 'text',
+            'content': str(Org_list),
         }],
         conversation={
             'memory': {'key': 'value'}
