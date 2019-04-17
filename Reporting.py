@@ -227,13 +227,120 @@ def costcenter():
     for i in DU_dict:
         if i[0] == placeholder:
             Org_list.append(i[1:])
+    buttonname = []
+    for k in Org_list:
+        if len(k) > 20:
+            buttonname.append(k[:20])
+        else:
+            buttonname.append(k)
+    if len(Org_list) == 1:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        }, ]
+    elif len(Org_list) == 2:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        }
+
+        ]
+    elif len(Org_list) == 3:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+        ]
+    elif len(Org_list) == 4:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        }
+        ]
+    elif len(Org_list) == 5:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+        ]
+    elif len(Org_list) == 6:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": Org_list[5],
+        }
+        ]
 
     return jsonify(
         status=200,
-        replies=[{
-            'type': 'text',
-            'content': str(Org_list),
-        }],
+        replies=[
+            {
+                "type": "quickReplies",
+                "content": {
+                    "title": "Which Delivery Unit?",
+                    "buttons": buttons
+                }
+            }
+        ],
         conversation={
             'memory': {'key': 'value'}
         }
