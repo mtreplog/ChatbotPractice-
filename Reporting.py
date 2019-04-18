@@ -6,6 +6,35 @@ import math
 app = Flask(__name__)
 port = '5000'
 
+S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
+ITAPPSERV = ['IT AppServ Mgmt SE', 'IT AppServ Mgmt US']
+HRI = ['IT HR I SE', 'IT HR I FR', 'IT HR I US', 'IT HR I ARG', 'IT HR I MEX']
+HRII = ['IT HR II SE', 'IT HR II SGD']
+CrossIT = ['Cross IT & Ops Mg US', 'Cross IT & Ops Mg SE']
+OpsShared = ['IT Ops & SharServ US', 'IT O &SS CAN', 'IT Ops & SharServ SE']
+IAM = ['IT I&DM CAN', 'IT IAM SE']
+SharedIT = ['SharIT App SE', 'SharIT App IND']
+CoreFinance = ['IT Core Finance SE', 'IT Core Finance US',
+               'IT Core Finance ROM', 'IT Core Finance SGD']
+Controlling = ['IT Controlling SE', 'IT Controlling US', 'IT Controlling SGD', 'IT Controlling ROM']
+Procurement = ['IT Procurement SE', 'IT Procurement US', 'IT Procurement SGD', 'IT Procurement IND']
+CorporateFin = ['IT Corp Fin Mgmt SE']
+GTMManagement = ['IT GTM Serv Mgmt US', 'IT GTM Serv Mgmt SE',
+                 'IT GTM Serv Mgmt SGP', 'IT GTM Serv Mgmt IND']
+Marketing = ['101035106', '109463005', '108404039', '101034801', '101040258']
+FranchiseApp = ['IT Sales Fran Ap SE', 'IT Sales Fran Ap SGD']
+PartnerManagement = ['IT PMgt CAN', 'IT PMgt FRAN', 'Core Processes - SGD']
+SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
+SalesI = ['IT GTM ServSal I SE', 'IT GTM ServSal I ROM', 'IT GTM ServSal I ROM', 'IT Sales I SGD',
+          'IT GTM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GTM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
+SolutionCenter = ['IT SolCent IND']
+C2R = ['IT Field Fin Mgmt US', 'IT Field Fin Mgmt SE', 'IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Field Fin I ROM', 'IT Rev Acc SGD',
+       'IT Field Fin II ROM', 'Core Processes - GY', 'Field Finance IT IND', 'IT Field Fin I IND', 'IT Rev Acc SE', 'IT Rev Acc US', 'IT Field Loc US']
+ITAppArchit = ['IT Appl Arch SE', 'IT Appl Arch US', 'IT Appl Arch CAN']
+Entitlement = ['AS i E&F Mgmt ROM', 'IT Ent & Ful Mgmt SE']
+ServiceDelivery = ['IT Serv EngDel SE', 'IT Serv Del US',
+                   'IT Serv Del Old SE', 'IT Serv EngDel US', 'IT Serv EngDel SGD']
+ITCoreValueChain = ['IT SVC Svc Mgmt SE']
 DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
            '2Contract to Revenue', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
 
@@ -197,7 +226,7 @@ def index2():
 
 
 @app.route('/DU', methods=['POST'])
-def costcenter():
+def DU():
     placeholder = ""
     Org_list = []
 
@@ -329,6 +358,36 @@ def costcenter():
             "value": Org_list[5],
         }
         ]
+    elif len(Org_list) == 7:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": Org_list[5],
+        },
+            {
+            "title": buttonname[6],
+            "value": Org_list[6],
+        }
+        ]
 
     return jsonify(
         status=200,
@@ -345,6 +404,9 @@ def costcenter():
             'memory': {'key': 'value'}
         }
     )
+    @app.route('/CC', methods=['POST'])
+    def costcenter():
+        data = (json.loads(request.get_data()))
 
 
 @app.route('/errors', methods=['POST'])
