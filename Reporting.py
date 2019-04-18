@@ -11,7 +11,7 @@ ITAPPSERV = ['IT AppServ Mgmt SE', 'IT AppServ Mgmt US']
 HRI = ['IT HR I SE', 'IT HR I FR', 'IT HR I US', 'IT HR I ARG', 'IT HR I MEX']
 HRII = ['IT HR II SE', 'IT HR II SGD']
 CrossIT = ['Cross IT & Ops Mg US', 'Cross IT & Ops Mg SE']
-OpsShared = ['IT Ops & SharServ US', 'IT O &SS CAN', 'IT Ops & SharServ SE']
+OpsShared = ['IT Ops & SharServ US', 'IT O & SS CAN', 'IT Ops & SharServ SE']
 IAM = ['IT I&DM CAN', 'IT IAM SE']
 SharedIT = ['SharIT App SE', 'SharIT App IND']
 CoreFinance = ['IT Core Finance SE', 'IT Core Finance US',
@@ -28,15 +28,21 @@ SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
 SalesI = ['IT GTM ServSal I SE', 'IT GTM ServSal I ROM', 'IT GTM ServSal I ROM', 'IT Sales I SGD',
           'IT GTM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GTM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
 SolutionCenter = ['IT SolCent IND']
-C2R = ['IT Field Fin Mgmt US', 'IT Field Fin Mgmt SE', 'IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Field Fin I ROM', 'IT Rev Acc SGD',
-       'IT Field Fin II ROM', 'Core Processes - GY', 'Field Finance IT IND', 'IT Field Fin I IND', 'IT Rev Acc SE', 'IT Rev Acc US', 'IT Field Loc US']
+C2RMgmtUS = ['IT Field Fin Mgmt US']
+C2RMgmtSE = ['IT Field Fin Mgmt SE']
+CtRI = ['IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Rev Acc SGD']
+CtRII = ['IT Field Fin II ROM', 'Core Processes - GY']
+IND = ['Field Finance IT IND', 'IT Field Fin I IND']
+RevenueAcounting = ['IT Rev Acc SE', 'IT Rev Acc US']
+US = ['IT Field Loc US']
 ITAppArchit = ['IT Appl Arch SE', 'IT Appl Arch US', 'IT Appl Arch CAN']
 Entitlement = ['AS i E&F Mgmt ROM', 'IT Ent & Ful Mgmt SE']
 ServiceDelivery = ['IT Serv EngDel SE', 'IT Serv Del US',
                    'IT Serv Del Old SE', 'IT Serv EngDel US', 'IT Serv EngDel SGD']
 ITCoreValueChain = ['IT SVC Svc Mgmt SE']
 DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
-           '2Contract to Revenue', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
+           '2C2R Mgmt. US', '2C2R Mgmt. SE', '2CtRI', '2CtRII', '2IND', '2Revenue Acounting', '2US', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
+Compliance = ['IT Compliance FR', 'IT Compliance DUB']
 
 
 @app.route('/mike', methods=['POST'])
@@ -404,9 +410,75 @@ def DU():
             'memory': {'key': 'value'}
         }
     )
-    @app.route('/CC', methods=['POST'])
-    def costcenter():
-        data = (json.loads(request.get_data()))
+
+
+@app.route('/CC', methods=['POST'])
+def costcenter():
+    CClist = []
+    data = (json.loads(request.get_data()))
+    Del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
+    if Del_unit == 'IT S/4 HANA Program Office':
+        CClist = S4HANACC
+    elif Del_unit == 'IT Application Services Mgmt':
+        CClist = ITAPPSERV
+    elif Del_unit == 'HR I':
+        CClist = HRI
+    elif Del_unit == 'HR II':
+        CClist = HRII
+    elif Del_unit == 'Cross IT & Operations Management':
+        CClist = CrossIT
+    elif Del_unit == 'Operations & Shared Services':
+        CClist = OpsShared
+    elif Del_unit == 'Identity & Accessmanagement':
+        CClist = IAM
+    elif Del_unit == 'Shared IT Applications':
+        CClist = SharedIT
+    elif Del_unit == 'Core Finance':
+        CClist = CoreFinance
+    elif Del_unit == 'Controlling':
+        CClist = Controlling
+    elif Del_unit == 'Corporate Finance Mgmt':
+        CClist = CorporateFin
+    elif Del_unit == 'Procurement':
+        CClist = Procurement
+    elif Del_unit == 'Compliance':
+        CClist = Compliance
+    elif Del_unit == 'Gtm Management':
+        CClist = GTMManagement
+    elif Del_unit == 'Marketing':
+        CClist = Marketing
+    elif Del_unit == 'Franchise Apps':
+        CClist = FranchiseApp
+    elif Del_unit == 'Partner Management':
+        CClist = PartnerManagement
+    elif Del_unit == 'Sales II':
+        CClist = SalesII
+    elif Del_unit == 'Sales I':
+        CClist = SalesI
+    elif Del_unit == 'Solution Center':
+        CClist = SolutionCenter
+    elif Del_unit == 'C2R Mgmt. US':
+        CClist = C2RMgmtUS
+    elif Del_unit == 'C2R Mgmt. SE':
+        CClist = C2RMgmtSE
+    elif Del_unit == 'CtRI':
+        CClist = CtRI
+    elif Del_unit == 'CtRII':
+        CClist = CtRII
+    elif Del_unit == 'IND':
+        CClist = IND
+    elif Del_unit == 'Revenue Acounting':
+        CClist = RevenueAcounting
+    elif Del_unit == 'US':
+        CClist = US
+    elif Del_unit == 'IT Application Architecture':
+        CClist = ITAppArchit
+    elif Del_unit == 'Entitlement & Fullfillment Mgmt':
+        CClist = Entitlement
+    elif Del_unit == 'Services Delivery':
+        CClist = ServiceDelivery
+    elif Del_unit == 'CVCS Mgmt':
+        CClist = ITCoreValueChain
 
 
 @app.route('/errors', methods=['POST'])
