@@ -6,6 +6,8 @@ import math
 app = Flask(__name__)
 port = '5000'
 
+NodeDict = {'IT Human resource': 'M3CIT03009', 'IT S/4 HANA Program Office': 'M3CIT04053', 'IT Application Services Mgmt': 'M3ITIN0206', 'Cross IT & Operations': 'M3CIT03003', 'IT Corporate Finance': 'M2CIT00302',
+            'IT Go-to-Market Services': 'M2CIT00312', 'IT Contract to Revenue': 'M3CIT03008', 'IT Application Architecture': 'M3ITIN0214', 'IT Services, Entitlement & Delivery': 'M3CIT03010', 'IT Core Value Chain Services Mgmt': 'M2CIT00305'}
 S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
 ITAPPSERV = ['IT AppServ Mgmt SE', 'IT AppServ Mgmt US']
 HRI = ['IT HR I SE', 'IT HR I FR', 'IT HR I US', 'IT HR I ARG', 'IT HR I MEX']
@@ -137,27 +139,13 @@ def index():
 @app.route('/', methods=['POST'])
 def index2():
     data = (json.loads(request.get_data()))
-    org_unit = data['conversation']['memory']['Org_unit']['value'].lower()
-    cost = data['conversation']['memory']['number']['value']
+    org_unit = data['conversation']['memory']['org_unit']['value']
+    cost = data['conversation']['memory']['numbers']['value']
     cost_group = data['conversation']['memory']['costtype']['value'].lower()
     date = data['conversation']['memory']['date']['value']
     userid = data['conversation']['memory']['userid']['value']
     name = data['conversation']['memory']['person']['fullname']
     headers = {'content-type': 'application/json'}
-    cleanDU = Org_Dict[org_unit]
-    newcost = ''.join(e for e in cost if e.isalnum())
-    cleancost = int(newcost)
-    cleandate = date[:3].title()
-    cleanid = userid.title()
-    cleanname = name.title()
-    cleantype = ''
-    org_org = 0
-    if cost_group[:2] == 'tr':
-        cleantype = 'Travel'
-    elif cost_group[0] == 'i':
-        cleantype = 'ICO'
-    else:
-        cleantype = '3rd Party'
 
     payload = {
         "Jan": 0,
@@ -208,12 +196,12 @@ def index2():
         }
     }
 
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Del_dict[org_org]
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = org_unit
     payload[cleandate] = cleancost
     payload['Resource']['Name'] = cleanname
     payload['Resource']['UserID'] = cleanid
     payload['CostCenter']['DeliveryUnit']['DU'] = cleanDU
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = Node_dict[org_org]
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = NodeDict[org_unit]
     payload['CostGroup']['CostGroup'] = cleantype
     payload['CostCenter']['CCID'] = Cost_Center_ID[org_unit]
     payload['CostCenter']['Name'] = Cost_Center_Dict[org_unit]
@@ -415,6 +403,7 @@ def DU():
 @app.route('/CC', methods=['POST'])
 def costcenter():
     CClist = []
+    buttonname = []
     data = (json.loads(request.get_data()))
     Del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
     if Del_unit == 'IT S/4 HANA Program Office':
@@ -427,7 +416,7 @@ def costcenter():
         CClist = HRII
     elif Del_unit == 'Cross IT & Operations Management':
         CClist = CrossIT
-    elif Del_unit == 'Operations & Shared Services':
+    elif Del_unit == 'Operations & Shared Service':
         CClist = OpsShared
     elif Del_unit == 'Identity & Accessmanagement':
         CClist = IAM
@@ -479,6 +468,154 @@ def costcenter():
         CClist = ServiceDelivery
     elif Del_unit == 'CVCS Mgmt':
         CClist = ITCoreValueChain
+
+    for q in CClist:
+        if len(q) > 20:
+            buttonname.append(q[:20])
+        else:
+            buttonname.append(q)
+    if len(CClist) == 1:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        }, ]
+    elif len(CClist) == 2:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        }
+
+        ]
+    elif len(CClist) == 3:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": CClist[2],
+        },
+        ]
+    elif len(CClist) == 4:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": CClist[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": CClist[3],
+        }
+        ]
+    elif len(CClist) == 5:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": CClist[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": CClist[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": CClist[4],
+        },
+        ]
+    elif len(CClist) == 6:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": CClist[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": CClist[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": CClist[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": CClist[5],
+        }
+        ]
+    elif len(CClist) == 7:
+        buttons = [{
+            "title": buttonname[0],
+            "value": CClist[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": CClist[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": CClist[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": CClist[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": CClist[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": CClist[5],
+        },
+            {
+            "title": buttonname[6],
+            "value": CClist[6],
+        }
+        ]
+
+    return jsonify(
+        status=200,
+        replies=[
+            {
+                "type": "quickReplies",
+                "content": {
+                    "title": "Please select a Cost Center:",
+                    "buttons": buttons
+                }
+            }
+        ],
+        conversation={
+            'memory': {'key': 'value'}
+        }
+    )
 
 
 @app.route('/errors', methods=['POST'])
