@@ -2,10 +2,13 @@ from flask import Flask, request, jsonify
 import json
 import requests
 import math
+import pandas as pd
 
 app = Flask(__name__)
 port = '5000'
-
+Org_unit = ''
+cost = 0
+del_unit = ''
 NodeDict = {'IT Human resource': 'M3CIT03009', 'IT S/4 HANA Program Office': 'M3CIT04053', 'IT Application Services Mgmt': 'M3ITIN0206', 'Cross IT & Operations': 'M3CIT03003', 'IT Corporate Finance': 'M2CIT00302',
             'IT Go-to-Market Services': 'M2CIT00312', 'IT Contract to Revenue': 'M3CIT03008', 'IT Application Architecture': 'M3ITIN0214', 'IT Services, Entitlement & Delivery': 'M3CIT03010', 'IT Core Value Chain Services Mgmt': 'M2CIT00305'}
 S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
@@ -45,6 +48,7 @@ ITCoreValueChain = ['IT SVC Svc Mgmt SE']
 DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
            '2C2R Mgmt. US', '2C2R Mgmt. SE', '2CtRI', '2CtRII', '2IND', '2Revenue Acounting', '2US', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
 Compliance = ['IT Compliance FR', 'IT Compliance DUB']
+CCDict = {'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378'}
 
 
 @app.route('/mike', methods=['POST'])
@@ -139,12 +143,14 @@ def index():
 @app.route('/', methods=['POST'])
 def index2():
     data = (json.loads(request.get_data()))
-    org_unit = data['conversation']['memory']['org_unit']['value']
-    cost = data['conversation']['memory']['numbers']['value']
-    cost_group = data['conversation']['memory']['costtype']['value'].lower()
-    date = data['conversation']['memory']['date']['value']
+    global cost
+    global Org_unit
+    global del_unit
+    date = data['conversation']['memory']['date']['value'].lower()
+    CostType = data['conversation']['memory']['cost_group']['raw']
     userid = data['conversation']['memory']['userid']['value']
     name = data['conversation']['memory']['person']['fullname']
+    CCname = data['conversation']['memory']['costcenter']['raw']
     headers = {'content-type': 'application/json'}
 
     payload = {
@@ -195,23 +201,52 @@ def index2():
             "Email": "string"
         }
     }
+    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx')
+    CCname2 = df['Unnamed: 4']
+    CC = df['Unnamed: 3']
+    Dict = dict(zip(CCname2, CC))
 
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = org_unit
-    payload[cleandate] = cleancost
-    payload['Resource']['Name'] = cleanname
-    payload['Resource']['UserID'] = cleanid
-    payload['CostCenter']['DeliveryUnit']['DU'] = cleanDU
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = NodeDict[org_unit]
-    payload['CostGroup']['CostGroup'] = cleantype
-    payload['CostCenter']['CCID'] = Cost_Center_ID[org_unit]
-    payload['CostCenter']['Name'] = Cost_Center_Dict[org_unit]
+    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx', sheet_name='Session2')
+    CCname1 = df['Unnamed: 4']
+    CC1 = df['Unnamed: 3']
+    Dict2 = (zip(CCname1, CC1))
+
+    z = Dict.copy()
+    z.update(Dict2)
+
+    if date == 'q1':
+        payload['Jan'] = int(cost/3)
+        payload['Feb'] = int(cost/3)
+        payload['Mar'] = int(cost/3)
+    elif date == 'q2':
+        payload['Apr'] = int(cost/3)
+        payload['May'] = int(cost/3)
+        payload['Jun'] = int(cost/3)
+    elif date == 'q3':
+        payload['Jul'] = int(cost/3)
+        payload['Aug'] = int(cost/3)
+        payload['Sep'] = int(cost/3)
+    elif date == 'q4':
+        payload['Oct'] = int(cost/3)
+        payload['Nov'] = int(cost/3)
+        payload['Dec'] = int(cost/3)
+    else:
+        payload[date.proper()[:3]] = cost
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Org_unit
+    payload['Resource']['Name'] = name.title()
+    payload['Resource']['UserID'] = userid.title()
+    payload['CostCenter']['DeliveryUnit']['DU'] = del_unit
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = NodeDict[Org_unit]
+    payload['CostGroup']['CostGroup'] = CostType
+    payload['CostCenter']['CCID'] = z[CCname]
+    payload['CostCenter']['Name'] = CCname
     post = requests.post(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
     return jsonify(
         status=200,
         replies=[{
             'type': 'text',
-            'content': str(payload)
+            'content': 'Success!'
         }],
         conversation={
             'memory': {'key': 'value'}
@@ -223,9 +258,12 @@ def index2():
 def DU():
     placeholder = ""
     Org_list = []
-
+    global Org_unit
+    global cost
     data = (json.loads(request.get_data()))
+
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
+    cost = int(data['conversation']['memory']['money']['amount'])
     if Org_unit == 'IT Go-to-Market Services':
         placeholder = '1'
     elif Org_unit == 'IT Contract to Revenue':
@@ -404,69 +442,70 @@ def DU():
 def costcenter():
     CClist = []
     buttonname = []
+    global del_unit
     data = (json.loads(request.get_data()))
-    Del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
-    if Del_unit == 'IT S/4 HANA Program Office':
+    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
+    if del_unit == 'IT S/4 HANA Program Office':
         CClist = S4HANACC
-    elif Del_unit == 'IT Application Services Mgmt':
+    elif del_unit == 'IT Application Services Mgmt':
         CClist = ITAPPSERV
-    elif Del_unit == 'HR I':
+    elif del_unit == 'HR I':
         CClist = HRI
-    elif Del_unit == 'HR II':
+    elif del_unit == 'HR II':
         CClist = HRII
-    elif Del_unit == 'Cross IT & Operations Management':
+    elif del_unit == 'Cross IT & Operations Management':
         CClist = CrossIT
-    elif Del_unit == 'Operations & Shared Service':
+    elif del_unit == 'Operations & Shared Service':
         CClist = OpsShared
-    elif Del_unit == 'Identity & Accessmanagement':
+    elif del_unit == 'Identity & Accessmanagement':
         CClist = IAM
-    elif Del_unit == 'Shared IT Applications':
+    elif del_unit == 'Shared IT Applications':
         CClist = SharedIT
-    elif Del_unit == 'Core Finance':
+    elif del_unit == 'Core Finance':
         CClist = CoreFinance
-    elif Del_unit == 'Controlling':
+    elif del_unit == 'Controlling':
         CClist = Controlling
-    elif Del_unit == 'Corporate Finance Mgmt':
+    elif del_unit == 'Corporate Finance Mgmt':
         CClist = CorporateFin
-    elif Del_unit == 'Procurement':
+    elif del_unit == 'Procurement':
         CClist = Procurement
-    elif Del_unit == 'Compliance':
+    elif del_unit == 'Compliance':
         CClist = Compliance
-    elif Del_unit == 'Gtm Management':
+    elif del_unit == 'Gtm Management':
         CClist = GTMManagement
-    elif Del_unit == 'Marketing':
+    elif del_unit == 'Marketing':
         CClist = Marketing
-    elif Del_unit == 'Franchise Apps':
+    elif del_unit == 'Franchise Apps':
         CClist = FranchiseApp
-    elif Del_unit == 'Partner Management':
+    elif del_unit == 'Partner Management':
         CClist = PartnerManagement
-    elif Del_unit == 'Sales II':
+    elif del_unit == 'Sales II':
         CClist = SalesII
-    elif Del_unit == 'Sales I':
+    elif del_unit == 'Sales I':
         CClist = SalesI
-    elif Del_unit == 'Solution Center':
+    elif del_unit == 'Solution Center':
         CClist = SolutionCenter
-    elif Del_unit == 'C2R Mgmt. US':
+    elif del_unit == 'C2R Mgmt. US':
         CClist = C2RMgmtUS
-    elif Del_unit == 'C2R Mgmt. SE':
+    elif del_unit == 'C2R Mgmt. SE':
         CClist = C2RMgmtSE
-    elif Del_unit == 'CtRI':
+    elif del_unit == 'CtRI':
         CClist = CtRI
-    elif Del_unit == 'CtRII':
+    elif del_unit == 'CtRII':
         CClist = CtRII
-    elif Del_unit == 'IND':
+    elif del_unit == 'IND':
         CClist = IND
-    elif Del_unit == 'Revenue Acounting':
+    elif del_unit == 'Revenue Acounting':
         CClist = RevenueAcounting
-    elif Del_unit == 'US':
+    elif del_unit == 'US':
         CClist = US
-    elif Del_unit == 'IT Application Architecture':
+    elif del_unit == 'IT Application Architecture':
         CClist = ITAppArchit
-    elif Del_unit == 'Entitlement & Fullfillment Mgmt':
+    elif del_unit == 'Entitlement & Fullfillment Mgmt':
         CClist = Entitlement
-    elif Del_unit == 'Services Delivery':
+    elif del_unit == 'Services Delivery':
         CClist = ServiceDelivery
-    elif Del_unit == 'CVCS Mgmt':
+    elif del_unit == 'CVCS Mgmt':
         CClist = ITCoreValueChain
 
     for q in CClist:
