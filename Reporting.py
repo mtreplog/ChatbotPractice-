@@ -26,7 +26,7 @@ Procurement = ['IT Procurement SE', 'IT Procurement US', 'IT Procurement SGD', '
 CorporateFin = ['IT Corp Fin Mgmt SE']
 GTMManagement = ['IT GTM Serv Mgmt US', 'IT GTM Serv Mgmt SE',
                  'IT GTM Serv Mgmt SGP', 'IT GTM Serv Mgmt IND']
-Marketing = ['101035106', '109463005', '108404039', '101034801', '101040258']
+Marketing = ['IT Marketing CAN', 'IT Marketing US', 'IT Marketing SE']
 FranchiseApp = ['IT Sales Fran Ap SE', 'IT Sales Fran Ap SGD']
 PartnerManagement = ['IT PMgt CAN', 'IT PMgt FRAN', 'Core Processes - SGD']
 SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
