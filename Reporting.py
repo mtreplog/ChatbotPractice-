@@ -33,7 +33,7 @@ SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
 SalesI = ['IT GTM ServSal I SE', 'IT GTM ServSal I ROM', 'IT GTM ServSal I ROM', 'IT Sales I SGD',
           'IT GTM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GTM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
 SolutionCenter = ['IT SolCent IND']
-C2RMgmtUS = ['IT Field Fin Mgmt US']
+C2RMgmtUS = ['IT Field Fin Mgmt Us']
 C2RMgmtSE = ['IT Field Fin Mgmt SE']
 CtRI = ['IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Rev Acc SGD']
 CtRII = ['IT Field Fin II ROM', 'Core Processes - GY']
@@ -54,7 +54,7 @@ CCDict = {'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378'
 @app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
-    org_unit = str(data['conversation']['memory']['Org_Unit']['raw']).lower()
+    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
 
     actuals = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
@@ -78,7 +78,7 @@ def index():
     ThirdParty = 0
     for i in actualsjson:
         try:
-            if i['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
                 Actuallist.append(i)
         except KeyError:
             pass
@@ -97,7 +97,7 @@ def index():
 
     for m in plannedjson:
         try:
-            if m['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
+            if m['CostCenter']['DeliveryUnit']['DU'] == del_unit:
                 Planninglist.append(m)
         except KeyError:
             pass
@@ -231,7 +231,7 @@ def index2():
         payload['Nov'] = int(cost/3)
         payload['Dec'] = int(cost/3)
     else:
-        payload[date.proper()[:3]] = cost
+        payload[date.title()[:3]] = cost
     payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Org_unit
     payload['Resource']['Name'] = name.title()
     payload['Resource']['UserID'] = userid.title()
@@ -264,6 +264,188 @@ def DU():
 
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
     cost = int(data['conversation']['memory']['money']['amount'])
+    if Org_unit == 'IT Go-to-Market Services':
+        placeholder = '1'
+    elif Org_unit == 'IT Contract to Revenue':
+        placeholder = '2'
+    elif Org_unit == 'IT Application Architecture':
+        placeholder = '3'
+    elif Org_unit == 'IT Services Entitlement & Delivery':
+        placeholder = '4'
+    elif Org_unit == 'IT Core Value Chain Services Mgmt':
+        placeholder = '5'
+    elif Org_unit == 'IT S/4 HANA Program Office':
+        placeholder = '6'
+    elif Org_unit == 'IT Application Services Mgmt':
+        placeholder = '7'
+    elif Org_unit == 'IT Human Resources':
+        placeholder = '8'
+    elif Org_unit == 'Cross IT & Operations':
+        placeholder = '9'
+    elif Org_unit == 'IT Corporate Finance':
+        placeholder = 'z'
+
+    for i in DU_dict:
+        if i[0] == placeholder:
+            Org_list.append(i[1:])
+    buttonname = []
+    for k in Org_list:
+        if len(k) > 20:
+            buttonname.append(k[:20])
+        else:
+            buttonname.append(k)
+    if len(Org_list) == 1:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        }, ]
+    elif len(Org_list) == 2:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        }
+
+        ]
+    elif len(Org_list) == 3:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+        ]
+    elif len(Org_list) == 4:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        }
+        ]
+    elif len(Org_list) == 5:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+        ]
+    elif len(Org_list) == 6:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": Org_list[5],
+        }
+        ]
+    elif len(Org_list) == 7:
+        buttons = [{
+            "title": buttonname[0],
+            "value": Org_list[0],
+        },
+            {
+            "title": buttonname[1],
+            "value": Org_list[1],
+        },
+            {
+            "title": buttonname[2],
+            "value": Org_list[2],
+        },
+            {
+            "title": buttonname[3],
+            "value": Org_list[3],
+        },
+            {
+            "title": buttonname[4],
+            "value": Org_list[4],
+        },
+            {
+            "title": buttonname[5],
+            "value": Org_list[5],
+        },
+            {
+            "title": buttonname[6],
+            "value": Org_list[6],
+        }
+        ]
+
+    return jsonify(
+        status=200,
+        replies=[
+            {
+                "type": "quickReplies",
+                "content": {
+                    "title": "Which Delivery Unit?",
+                    "buttons": buttons
+                }
+            }
+        ],
+        conversation={
+            'memory': {'key': 'value'}
+        }
+    )
+
+
+@app.route('/DU1', methods=['POST'])
+def DU1():
+    placeholder = ""
+    Org_list = []
+    data = (json.loads(request.get_data()))
+
+    Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
+
     if Org_unit == 'IT Go-to-Market Services':
         placeholder = '1'
     elif Org_unit == 'IT Contract to Revenue':
