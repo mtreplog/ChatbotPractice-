@@ -12,51 +12,30 @@ del_unit = ''
 Node = ''
 CClist = ''
 CCDict = {}
+Travel = 0
+ICO = 0
+ThirdParty = 0
 
 
 @app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
-    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
-
-    actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
 
     planned = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
 
-    actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
 
     PercentTraveled = 0
     PercentICO = 0
     PercentThirdParty = 0
-    Actuallist = []
     Planninglist = []
     travelplanned = 0
     ICOplanned = 0
     ThirdPartyplanned = 0
-    Travel = 0
-    ICO = 0
-    ThirdParty = 0
-    for i in actualsjson:
-        try:
-            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
-                Actuallist.append(i)
-        except KeyError:
-            pass
-
-    for x in Actuallist:
-        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
-            ThirdParty += math.floor(x['Budget_Actuals'])
-
-    for k in Actuallist:
-        if k['CostGroups'][0]['CostGroup'] == 'Travel':
-            Travel += math.floor(x['Budget_Actuals'])
-
-    for l in Actuallist:
-        if l['CostGroups'][0]['CostGroup'] == 'ICO':
-            ICO += math.floor(x['Budget_Actuals'])
+    global ThirdParty
+    global ICO
+    global Travel
 
     for m in plannedjson:
         try:
@@ -200,6 +179,46 @@ def index2():
         replies=[{
             'type': 'text',
             'content': 'Success!'
+        }],
+        conversation={
+            'memory': {'key': 'value'}
+        }
+    )
+
+
+@app.route('/new', methods=['POST'])
+def new():
+    global del_unit
+    global ThirdParty
+    global Travel
+    global ICO
+    Actuallist = []
+    data = (json.loads(request.get_data()))
+    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
+    actuals = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+    final = json.loads(actuals.text)
+    for i in final:
+        try:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
+                Actuallist.append(i)
+        except KeyError:
+            pass
+    for x in Actuallist:
+        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
+            ThirdParty += math.floor(x['Budget_Actuals'])
+    for k in Actuallist:
+        if k['CostGroups'][0]['CostGroup'] == 'Travel':
+            Travel += math.floor(x['Budget_Actuals'])
+    for l in Actuallist:
+        if l['CostGroups'][0]['CostGroup'] == 'ICO':
+            ICO += math.floor(x['Budget_Actuals'])
+
+    return jsonify(
+        status=200,
+        replies=[{
+            'type': 'Hold on for a second....',
+            'content': 'Roger that',
         }],
         conversation={
             'memory': {'key': 'value'}
@@ -390,7 +409,10 @@ def DU():
 
 @app.route('/DU1', methods=['POST'])
 def DU1():
-    global Actuallist
+    Actuallist = []
+    global ThirdParty
+    global Travel
+    global ICO
     placeholder = ""
     Org_list = []
     count = 0
