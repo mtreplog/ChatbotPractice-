@@ -426,25 +426,6 @@ def DU1():
 
     for i in final:
         try:
-            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
-                Actuallist.append(i)
-        except KeyError:
-            pass
-
-    for x in Actuallist:
-        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
-            ThirdParty += math.floor(x['Budget_Actuals'])
-
-    for k in Actuallist:
-        if k['CostGroups'][0]['CostGroup'] == 'Travel':
-            Travel += math.floor(x['Budget_Actuals'])
-
-    for l in Actuallist:
-        if l['CostGroups'][0]['CostGroup'] == 'ICO':
-            ICO += math.floor(x['Budget_Actuals'])
-
-    for i in final:
-        try:
             if i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] == Org_unit:
                 for key in Org_list:
                     if i['CostCenter']['DeliveryUnit']['DU'] == key:
