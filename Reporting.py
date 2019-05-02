@@ -9,6 +9,9 @@ port = '5000'
 Org_unit = ''
 cost = 0
 del_unit = ''
+Node = ''
+CClist = ''
+CCDict = {}
 NodeDict = {'IT Human Resources': 'M3CIT03009', 'IT S/4 HANA Program Office': 'M3CIT04053', 'IT Application Services Mgmt': 'M3ITIN0206', 'Cross IT & Operations': 'M3CIT03003', 'IT Corporate Finance': 'M2CIT00302',
             'IT Go-to-Market Services': 'M2CIT00312', 'IT Contract to Revenue': 'M3CIT03008', 'IT Application Architecture': 'M3ITIN0214', 'IT Services, Entitlement & Delivery': 'M3CIT03010', 'IT Core Value Chain Services Mgmt': 'M2CIT00305'}
 S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
@@ -257,37 +260,34 @@ def index2():
 @app.route('/DU', methods=['POST'])
 def DU():
     placeholder = ""
+    count = 0
     Org_list = []
     global Org_unit
     global cost
     data = (json.loads(request.get_data()))
-
+    global Node
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
     cost = int(data['conversation']['memory']['money']['amount'])
-    if Org_unit == 'IT Go-to-Market Services':
-        placeholder = '1'
-    elif Org_unit == 'IT Contract to Revenue':
-        placeholder = '2'
-    elif Org_unit == 'IT Application Architecture':
-        placeholder = '3'
-    elif Org_unit == 'IT Services Entitlement & Delivery':
-        placeholder = '4'
-    elif Org_unit == 'IT Core Value Chain Services Mgmt':
-        placeholder = '5'
-    elif Org_unit == 'IT S/4 HANA Program Office':
-        placeholder = '6'
-    elif Org_unit == 'IT Application Services Mgmt':
-        placeholder = '7'
-    elif Org_unit == 'IT Human Resources':
-        placeholder = '8'
-    elif Org_unit == 'Cross IT & Operations':
-        placeholder = '9'
-    elif Org_unit == 'IT Corporate Finance':
-        placeholder = 'z'
 
-    for i in DU_dict:
-        if i[0] == placeholder:
-            Org_list.append(i[1:])
+    actuals = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+    final = json.loads(actuals.text)
+
+    for i in final:
+        try:
+
+            if i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] == Org_unit:
+                Node = i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node']
+                for key in Org_list:
+                    if i['CostCenter']['DeliveryUnit']['DU'] == key:
+                        count += 1
+                if count == 0:
+                    Org_list.append(i['CostCenter']['DeliveryUnit']['DU'])
+
+            count = 0
+        except KeyError:
+            pass
+
     buttonname = []
     for k in Org_list:
         if len(k) > 20:
@@ -442,34 +442,28 @@ def DU():
 def DU1():
     placeholder = ""
     Org_list = []
+    count = 0
     data = (json.loads(request.get_data()))
 
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
 
-    if Org_unit == 'IT Go-to-Market Services':
-        placeholder = '1'
-    elif Org_unit == 'IT Contract to Revenue':
-        placeholder = '2'
-    elif Org_unit == 'IT Application Architecture':
-        placeholder = '3'
-    elif Org_unit == 'IT Services Entitlement & Delivery':
-        placeholder = '4'
-    elif Org_unit == 'IT Core Value Chain Services Mgmt':
-        placeholder = '5'
-    elif Org_unit == 'IT S/4 HANA Program Office':
-        placeholder = '6'
-    elif Org_unit == 'IT Application Services Mgmt':
-        placeholder = '7'
-    elif Org_unit == 'IT Human Resources':
-        placeholder = '8'
-    elif Org_unit == 'Cross IT & Operations':
-        placeholder = '9'
-    elif Org_unit == 'IT Corporate Finance':
-        placeholder = 'z'
+    actuals = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+    final = json.loads(actuals.text)
 
-    for i in DU_dict:
-        if i[0] == placeholder:
-            Org_list.append(i[1:])
+    for i in final:
+        try:
+            if i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] == Org_unit:
+                for key in Org_list:
+                    if i['CostCenter']['DeliveryUnit']['DU'] == key:
+                        count += 1
+                if count == 0:
+                    Org_list.append(i['CostCenter']['DeliveryUnit']['DU'])
+
+            count = 0
+        except KeyError:
+            pass
+
     buttonname = []
     for k in Org_list:
         if len(k) > 20:
@@ -624,71 +618,30 @@ def DU1():
 def costcenter():
     CClist = []
     buttonname = []
+    global CCnum
     global del_unit
     data = (json.loads(request.get_data()))
     del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
-    if del_unit == 'IT S/4 HANA Program Office':
-        CClist = S4HANACC
-    elif del_unit == 'IT Application Services Mgmt':
-        CClist = ITAPPSERV
-    elif del_unit == 'HR I':
-        CClist = HRI
-    elif del_unit == 'HR II':
-        CClist = HRII
-    elif del_unit == 'Cross IT & Operations Management':
-        CClist = CrossIT
-    elif del_unit == 'Operations & Shared Service':
-        CClist = OpsShared
-    elif del_unit == 'Identity & Accessmanagement':
-        CClist = IAM
-    elif del_unit == 'Shared IT Applications':
-        CClist = SharedIT
-    elif del_unit == 'Core Finance':
-        CClist = CoreFinance
-    elif del_unit == 'Controlling':
-        CClist = Controlling
-    elif del_unit == 'Corporate Finance Mgmt':
-        CClist = CorporateFin
-    elif del_unit == 'Procurement':
-        CClist = Procurement
-    elif del_unit == 'Compliance':
-        CClist = Compliance
-    elif del_unit == 'Gtm Management':
-        CClist = GTMManagement
-    elif del_unit == 'Marketing':
-        CClist = Marketing
-    elif del_unit == 'Franchise Apps':
-        CClist = FranchiseApp
-    elif del_unit == 'Partner Management':
-        CClist = PartnerManagement
-    elif del_unit == 'Sales II':
-        CClist = SalesII
-    elif del_unit == 'Sales I':
-        CClist = SalesI
-    elif del_unit == 'Solution Center':
-        CClist = SolutionCenter
-    elif del_unit == 'C2R Mgmt. US':
-        CClist = C2RMgmtUS
-    elif del_unit == 'C2R Mgmt. SE':
-        CClist = C2RMgmtSE
-    elif del_unit == 'CtRI':
-        CClist = CtRI
-    elif del_unit == 'CtRII':
-        CClist = CtRII
-    elif del_unit == 'IND':
-        CClist = IND
-    elif del_unit == 'Revenue Acounting':
-        CClist = RevenueAcounting
-    elif del_unit == 'US':
-        CClist = US
-    elif del_unit == 'IT Application Architecture':
-        CClist = ITAppArchit
-    elif del_unit == 'Entitlement & Fullfillment Mgmt':
-        CClist = Entitlement
-    elif del_unit == 'Services Delivery':
-        CClist = ServiceDelivery
-    elif del_unit == 'CVCS Mgmt':
-        CClist = ITCoreValueChain
+
+    count = 0
+
+    actuals = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+    final = json.loads(actuals.text)
+
+    for i in final:
+        try:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
+                for key in CClist:
+                    if i['CostCenter']['Name'] == key:
+                        count += 1
+                if count == 0:
+                    CClist.append(i['CostCenter']['Name'])
+                    CCnum.append(i['CostCenter']['CCID'])
+
+            count = 0
+        except KeyError:
+            pass
 
     for q in CClist:
         if len(q) > 20:
