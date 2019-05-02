@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import json
 import requests
 import math
-import pandas as pd
+
 
 app = Flask(__name__)
 port = '5000'
@@ -12,46 +12,6 @@ del_unit = ''
 Node = ''
 CClist = ''
 CCDict = {}
-NodeDict = {'IT Human Resources': 'M3CIT03009', 'IT S/4 HANA Program Office': 'M3CIT04053', 'IT Application Services Mgmt': 'M3ITIN0206', 'Cross IT & Operations': 'M3CIT03003', 'IT Corporate Finance': 'M2CIT00302',
-            'IT Go-to-Market Services': 'M2CIT00312', 'IT Contract to Revenue': 'M3CIT03008', 'IT Application Architecture': 'M3ITIN0214', 'IT Services, Entitlement & Delivery': 'M3CIT03010', 'IT Core Value Chain Services Mgmt': 'M2CIT00305'}
-S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
-ITAPPSERV = ['IT AppServ Mgmt SE', 'IT AppServ Mgmt US']
-HRI = ['IT HR I SE', 'IT HR I FR', 'IT HR I US', 'IT HR I ARG', 'IT HR I MEX']
-HRII = ['IT HR II SE', 'IT HR II SGD']
-CrossIT = ['Cross IT & Ops Mg US', 'Cross IT & Ops Mg SE']
-OpsShared = ['IT Ops & SharServ US', 'IT O & SS CAN', 'IT Ops & SharServ SE']
-IAM = ['IT I&DM CAN', 'IT IAM SE']
-SharedIT = ['SharIT App SE', 'SharIT App IND']
-CoreFinance = ['IT Core Finance SE', 'IT Core Finance US',
-               'IT Core Finance ROM', 'IT Core Finance SGD']
-Controlling = ['IT Controlling SE', 'IT Controlling US', 'IT Controlling SGD', 'IT Controlling ROM']
-Procurement = ['IT Procurement SE', 'IT Procurement US', 'IT Procurement SGD', 'IT Procurement IND']
-CorporateFin = ['IT Corp Fin Mgmt SE']
-GTMManagement = ['IT GTM Serv Mgmt US', 'IT GTM Serv Mgmt SE',
-                 'IT GTM Serv Mgmt SGP', 'IT GTM Serv Mgmt IND']
-Marketing = ['IT Marketing CAN', 'IT Marketing US', 'IT Marketing SE']
-FranchiseApp = ['IT Sales Fran Ap SE', 'IT Sales Fran Ap SGD']
-PartnerManagement = ['IT PMgt CAN', 'IT PMgt FRAN', 'Core Processes - SGD']
-SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
-SalesI = ['IT GTM ServSal I SE', 'IT GTM ServSal I ROM', 'IT GTM ServSal I ROM', 'IT Sales I SGD',
-          'IT GTM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GTM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
-SolutionCenter = ['IT SolCent IND']
-C2RMgmtUS = ['IT Field Fin Mgmt Us']
-C2RMgmtSE = ['IT Field Fin Mgmt SE']
-CtRI = ['IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Rev Acc SGD']
-CtRII = ['IT Field Fin II ROM', 'Core Processes - GY']
-IND = ['Field Finance IT IND', 'IT Field Fin I IND']
-RevenueAcounting = ['IT Rev Acc SE', 'IT Rev Acc US']
-US = ['IT Field Loc US']
-ITAppArchit = ['IT Appl Arch SE', 'IT Appl Arch US', 'IT Appl Arch CAN']
-Entitlement = ['AS i E&F Mgmt ROM', 'IT Ent & Ful Mgmt SE']
-ServiceDelivery = ['IT Serv EngDel SE', 'IT Serv Del US',
-                   'IT Serv Del Old SE', 'IT Serv EngDel US', 'IT Serv EngDel SGD']
-ITCoreValueChain = ['IT SVC Svc Mgmt SE']
-DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
-           '2C2R Mgmt. US', '2C2R Mgmt. SE', '2CtRI', '2CtRII', '2IND', '2Revenue Acounting', '2US', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
-Compliance = ['IT Compliance FR', 'IT Compliance DUB']
-CCDict = {'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378'}
 
 
 @app.route('/mike', methods=['POST'])
@@ -149,6 +109,8 @@ def index2():
     global cost
     global Org_unit
     global del_unit
+    global CCDict
+    global Node
     date = data['conversation']['memory']['date']['value'].lower()
     CostType = data['conversation']['memory']['cost_group']['raw']
     userid = data['conversation']['memory']['userid']['value']
@@ -204,18 +166,6 @@ def index2():
             "Email": "string"
         }
     }
-    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx')
-    CCname2 = df['Unnamed: 4']
-    CC = df['Unnamed: 3']
-    Dict = dict(zip(CCname2, CC))
-
-    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx', sheet_name='Session2')
-    CCname1 = df['Unnamed: 4']
-    CC1 = df['Unnamed: 3']
-    Dict2 = (zip(CCname1, CC1))
-
-    z = Dict.copy()
-    z.update(Dict2)
 
     if date == 'q1':
         payload['Jan'] = int(cost/3)
@@ -239,9 +189,9 @@ def index2():
     payload['Resource']['Name'] = name.title()
     payload['Resource']['UserID'] = userid.title()
     payload['CostCenter']['DeliveryUnit']['DU'] = del_unit
-    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = NodeDict[Org_unit]
+    payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = Node
     payload['CostGroup']['CostGroup'] = CostType
-    payload['CostCenter']['CCID'] = z[CCname]
+    payload['CostCenter']['CCID'] = CCDict[CCname]
     payload['CostCenter']['Name'] = CCname
     post = requests.post(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
@@ -440,6 +390,7 @@ def DU():
 
 @app.route('/DU1', methods=['POST'])
 def DU1():
+    global Actuallist
     placeholder = ""
     Org_list = []
     count = 0
@@ -450,6 +401,25 @@ def DU1():
     actuals = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
     final = json.loads(actuals.text)
+
+    for i in final:
+        try:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
+                Actuallist.append(i)
+        except KeyError:
+            pass
+
+    for x in Actuallist:
+        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
+            ThirdParty += math.floor(x['Budget_Actuals'])
+
+    for k in Actuallist:
+        if k['CostGroups'][0]['CostGroup'] == 'Travel':
+            Travel += math.floor(x['Budget_Actuals'])
+
+    for l in Actuallist:
+        if l['CostGroups'][0]['CostGroup'] == 'ICO':
+            ICO += math.floor(x['Budget_Actuals'])
 
     for i in final:
         try:
@@ -618,7 +588,7 @@ def DU1():
 def costcenter():
     CClist = []
     buttonname = []
-    global CCnum
+    global CCDict
     global del_unit
     data = (json.loads(request.get_data()))
     del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
@@ -637,7 +607,7 @@ def costcenter():
                         count += 1
                 if count == 0:
                     CClist.append(i['CostCenter']['Name'])
-                    CCnum.append(i['CostCenter']['CCID'])
+                    CCDict[(i['CostCenter']['Name'])] = (i['CostCenter']['CCID'])
 
             count = 0
         except KeyError:
