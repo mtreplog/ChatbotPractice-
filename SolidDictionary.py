@@ -54,7 +54,7 @@ CCDict = {'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378'
 @app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
-    org_unit = str(data['conversation']['memory']['Org_Unit']['raw']).lower()
+    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
 
     actuals = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
@@ -78,7 +78,7 @@ def index():
     ThirdParty = 0
     for i in actualsjson:
         try:
-            if i['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
                 Actuallist.append(i)
         except KeyError:
             pass
@@ -97,7 +97,7 @@ def index():
 
     for m in plannedjson:
         try:
-            if m['CostCenter']['DeliveryUnit']['DU'] == Org_Dict[org_unit]:
+            if m['CostCenter']['DeliveryUnit']['DU'] == del_unit:
                 Planninglist.append(m)
         except KeyError:
             pass

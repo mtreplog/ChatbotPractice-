@@ -187,46 +187,6 @@ def index2():
     )
 
 
-@app.route('/new', methods=['POST'])
-def new():
-    global del_unit
-    global ThirdParty
-    global Travel
-    global ICO
-    Actuallist = []
-    data = (json.loads(request.get_data()))
-    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
-    actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
-    final = json.loads(actuals.text)
-    for i in final:
-        try:
-            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
-                Actuallist.append(i)
-        except KeyError:
-            pass
-    for x in Actuallist:
-        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
-            ThirdParty += math.floor(x['Budget_Actuals'])
-    for k in Actuallist:
-        if k['CostGroups'][0]['CostGroup'] == 'Travel':
-            Travel += math.floor(x['Budget_Actuals'])
-    for l in Actuallist:
-        if l['CostGroups'][0]['CostGroup'] == 'ICO':
-            ICO += math.floor(x['Budget_Actuals'])
-
-    return jsonify(
-        status=200,
-        replies=[{
-            'type': 'Hold on for a second....',
-            'content': 'Roger that',
-        }],
-        conversation={
-            'memory': {'key': 'value'}
-        }
-    )
-
-
 @app.route('/DU', methods=['POST'])
 def DU():
     placeholder = ""
