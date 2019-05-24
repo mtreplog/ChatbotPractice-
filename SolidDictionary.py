@@ -2,13 +2,14 @@ from flask import Flask, request, jsonify
 import json
 import requests
 import math
-import pandas as pd
 
 app = Flask(__name__)
 port = '5000'
 Org_unit = ''
 cost = 0
 del_unit = ''
+CCDict = {'IT S/4 Hana PO SE': '101004059',
+          'IT S/4 HANA PO FRAN': '105410111', 'IT S/4 Hana PO US': '108004032', 'IT AppServ Mgmt SE': '101030073', 'IT AppServ Mgmt US': '108004071', 'IT HR I SE': '101004080', 'IT HR I FR': '105410113', 'IT HR I US': '108004051', 'IT HR I ARG': '161004073', 'IT HR I MEX': '135004021', 'IT HR II SE': '101035010', 'IT HR II SGD': '115000402', 'Cross IT & Ops Mg US': '108004036', 'Cross IT & Ops Mg SE': '101035101', 'IT Ops & SharServ US': '108611700', 'IT O &SS CAN': '109004102', 'IT Ops & SharServ SE': '101000432', 'IT Op & ShServ SGD': '115004535', 'IT I&DM CAN': '109420400', 'IT IAM SE': '101000452', 'SharIT App SE': '101035103', 'SharIT App IND': '176223020', 'IT Core Finance SE': '101000348', 'IT Controlling SE': '101004002', 'IT Corp Fin Mgmt SE': '101030010', 'IT Procurement SE': '101035030', 'IT Compliance FR': '10500616', 'IT Core Finance US': '108000402', 'IT Controlling US': '108061152', 'IT Procurement US': '108611541', 'IT Procurement SGD': '115000330', 'IT Controlling SGD': '115004913', 'IT Core Finance SGD': '115800024', 'IT Procurement IND': '176074148', 'IT Core Finance ROM': '181000170', 'IT Controlling ROM': '181010088', 'IT Compliance DUB': '700092330', 'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378', 'IT GtM Serv Mgmt SGP': '115040229', 'IT GtM Serv Mgmt IND': '176000414', 'IT Marketing CAN': '109463005', 'IT Marketing SE': '101035106', 'IT Marketing US': '108404039', 'IT Marketing SE': '101034801', 'IT Sales Fran Ap SE': '101000353', 'IT Sales Fran Ap SGD': '115004013', 'IT PMgt CAN': '109000402', 'IT PMgt FRAN': '105410107', 'Core Processes-SGD': '115004912', 'IT Sales II SGD': '115000140', 'IT GtM ServSal II US': '108040540', 'IT GtM ServSal I SE': '101004081', 'IT GtM ServSal I ROM': '181000400', 'IT Sales I SGD': '115414000', 'IT GtM SerSal I SMAT': '750200749', 'IT DES - Sal I SMAT': '750200746', 'IT GtM ServSal I US': '108611537', 'IT DES - Sale I DUB': '700092217', 'IT SolCent IND': '176017610', 'IT Field Fin Mgmt Us': '108004029', 'IT Field Fin Mgmt SE': '101011236', 'IT Field Fin I SE': '101062161', 'IT Field Fin I SGD': '115004902', 'IT Field Fin I ROM': '181000200', 'IT Rev Acc SGD': '115049115', 'IT Field Fin II ROM': '181004017', 'Core Processes - GY': '101000426', 'Field Finance IT IND': '176017006', 'IT Field Fin I IND': '176014210', 'IT Rev Acc SE': '101000499', 'IT Rev Acc US': '108004025', 'IT Field Loc US': '108404036', 'IT Appl Arch SE': '101004027', 'IT Appl Arch US': '108000428', 'IT Appl Arch CAN': '109000403', 'AS - E&F Mgmt ROM': '181071071', 'IT Ent & Ful Mgmt SE': '101004007', 'IT Serv EngDel SE': '101035080', 'IT Serv Del US': '108471123', 'IT Serv Del Old SE': '101040225', 'IT Serv EngDel US': '108471123', 'IT Serv EngDel SGD': '115000490'}
 NodeDict = {'IT Human Resources': 'M3CIT03009', 'IT S/4 HANA Program Office': 'M3CIT04054', 'IT Application Services Mgmt': 'M3ITIN0206', 'Cross IT & Operations': 'M3CIT03003', 'IT Corporate Finance': 'M2CIT00302',
             'IT Go-to-Market Services': 'M2CIT00312', 'IT Contract to Revenue': 'M3CIT03008', 'IT Application Architecture': 'M3ITIN0214', 'IT Services, Entitlement & Delivery': 'M3CIT03010', 'IT Core Value Chain Services Mgmt': 'M2CIT00305'}
 S4HANACC = ['IT S/4 Hana PO SE', 'IT S/4 HANA PO FRAN', 'IT S/4 Hana PO SE', 'IT S/4 HANA PO US']
@@ -16,7 +17,7 @@ ITAPPSERV = ['IT AppServ Mgmt SE', 'IT AppServ Mgmt US']
 HRI = ['IT HR I SE', 'IT HR I FR', 'IT HR I US', 'IT HR I ARG', 'IT HR I MEX']
 HRII = ['IT HR II SE', 'IT HR II SGD']
 CrossIT = ['Cross IT & Ops Mg US', 'Cross IT & Ops Mg SE']
-OpsShared = ['IT Ops & SharServ US', 'IT O & SS CAN', 'IT Ops & SharServ SE']
+OpsShared = ['IT Ops & SharServ US', 'IT O &SS CAN', 'IT Ops & SharServ SE', 'IT Op & ShServ SGD']
 IAM = ['IT I&DM CAN', 'IT IAM SE']
 SharedIT = ['SharIT App SE', 'SharIT App IND']
 CoreFinance = ['IT Core Finance SE', 'IT Core Finance US',
@@ -24,31 +25,30 @@ CoreFinance = ['IT Core Finance SE', 'IT Core Finance US',
 Controlling = ['IT Controlling SE', 'IT Controlling US', 'IT Controlling SGD', 'IT Controlling ROM']
 Procurement = ['IT Procurement SE', 'IT Procurement US', 'IT Procurement SGD', 'IT Procurement IND']
 CorporateFin = ['IT Corp Fin Mgmt SE']
-GTMManagement = ['IT GTM Serv Mgmt US', 'IT GTM Serv Mgmt SE',
-                 'IT GTM Serv Mgmt SGP', 'IT GTM Serv Mgmt IND']
-Marketing = ['101035106', '109463005', '108404039', '101034801', '101040258']
+GTMManagement = ['IT GtM Serv Mgmt US', 'IT GtM Serv Mgmt SE',
+                 'IT GtM Serv Mgmt SGP', 'IT GtM Serv Mgmt IND']
+Marketing = ['IT Marketing CAN', 'IT Marketing US', 'IT Marketing SE']
 FranchiseApp = ['IT Sales Fran Ap SE', 'IT Sales Fran Ap SGD']
 PartnerManagement = ['IT PMgt CAN', 'IT PMgt FRAN', 'Core Processes - SGD']
-SalesII = ['IT Sales II SGD', 'IT Gtm ServSal II US']
-SalesI = ['IT GTM ServSal I SE', 'IT GTM ServSal I ROM', 'IT GTM ServSal I ROM', 'IT Sales I SGD',
-          'IT GTM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GTM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
+SalesII = ['IT Sales II SGD', 'IT GtM ServSal II US']
+SalesI = ['IT GtM ServSal I SE', 'IT GtM ServSal I ROM', 'IT GtM ServSal I ROM', 'IT Sales I SGD',
+          'IT GtM SerSal I SMAT', 'IT DES - Sal I SMAT', 'IT GtM ServSal I US', 'IT DES - Sale I DUB', 'IT SolCent IND']
 SolutionCenter = ['IT SolCent IND']
 C2RMgmtUS = ['IT Field Fin Mgmt US']
 C2RMgmtSE = ['IT Field Fin Mgmt SE']
-CtRI = ['IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Rev Acc SGD']
+CtRI = ['IT Field Fin I SE', 'IT Field Fin I SGD', 'IT Rev Acc SGD', 'IT Field Fin I ROM']
 CtRII = ['IT Field Fin II ROM', 'Core Processes - GY']
 IND = ['Field Finance IT IND', 'IT Field Fin I IND']
 RevenueAcounting = ['IT Rev Acc SE', 'IT Rev Acc US']
 US = ['IT Field Loc US']
 ITAppArchit = ['IT Appl Arch SE', 'IT Appl Arch US', 'IT Appl Arch CAN']
-Entitlement = ['AS i E&F Mgmt ROM', 'IT Ent & Ful Mgmt SE']
+Entitlement = ['AS - E&F Mgmt ROM', 'IT Ent & Ful Mgmt SE']
 ServiceDelivery = ['IT Serv EngDel SE', 'IT Serv Del US',
                    'IT Serv Del Old SE', 'IT Serv EngDel US', 'IT Serv EngDel SGD']
 ITCoreValueChain = ['IT SVC Svc Mgmt SE']
 DU_dict = ['1GtM Management', '1Marketing', '1Franchise Apps', '1Partner Management', '1Sales II', '1Sales I', '1Solution Center',
            '2C2R Mgmt. US', '2C2R Mgmt. SE', '2CtRI', '2CtRII', '2IND', '2Revenue Acounting', '2US', '3IT Application Architecture', '4Entitlement & Fullfillment Mgmt', '4Services Delivery', '5CVCS Mgmt', '6IT S/4 HANA Program Office', '7IT Application Services Mgmt', '8HR I', '8HR II', '9Cross IT & Operations Management', '9Operations & Shared Service', '9Identity & Accessmanagement', '9Shared IT Applications', 'zCore Finance', 'zControlling', 'zCorporate Finance Mgmt', 'zProcurement']
 Compliance = ['IT Compliance FR', 'IT Compliance DUB']
-CCDict = {'IT GtM Serv Mgmt US': '108001010', 'IT GtM Serv Mgmt SE': '101000378'}
 
 
 @app.route('/mike', methods=['POST'])
@@ -202,18 +202,6 @@ def index2():
             "Email": "string"
         }
     }
-    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx')
-    CCname2 = df['Unnamed: 4']
-    CC = df['Unnamed: 3']
-    Dict = dict(zip(CCname2, CC))
-
-    df = pd.read_excel('C:/Users/I506992/Desktop/NodesCC.xlsx', sheet_name='Session2')
-    CCname1 = df['Unnamed: 4']
-    CC1 = df['Unnamed: 3']
-    Dict2 = (zip(CCname1, CC1))
-
-    z = Dict.copy()
-    z.update(Dict2)
 
     if date == 'q1':
         payload['Jan'] = int(cost/3)
@@ -239,7 +227,7 @@ def index2():
     payload['CostCenter']['DeliveryUnit']['DU'] = del_unit
     payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = NodeDict[Org_unit]
     payload['CostGroup']['CostGroup'] = CostType
-    payload['CostCenter']['CCID'] = z[CCname]
+    payload['CostCenter']['CCID'] = CCDict[CCname]
     payload['CostCenter']['Name'] = CCname
     payload['CostType']['CostType'] = CostGroup
     post = requests.post(
@@ -265,7 +253,7 @@ def DU():
     data = (json.loads(request.get_data()))
 
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
-    cost = int(data['conversation']['memory']['money']['amount'])
+    cost = int(data['conversation']['memory']['money']['raw'])
     if Org_unit == 'IT Go-to-Market Services':
         placeholder = '1'
     elif Org_unit == 'IT Contract to Revenue':

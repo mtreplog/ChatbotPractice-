@@ -20,22 +20,46 @@ ThirdParty = 0
 @app.route('/mike', methods=['POST'])
 def index():
     data = (json.loads(request.get_data()))
+    del_unit = str(data['conversation']['memory']['deliveryunit']['raw'])
+
+    actuals = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals', timeout=15)
 
     planned = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
 
+    actualsjson = json.loads(actuals.text)
     plannedjson = json.loads(planned.text)
 
     PercentTraveled = 0
     PercentICO = 0
     PercentThirdParty = 0
+    Actuallist = []
     Planninglist = []
     travelplanned = 0
     ICOplanned = 0
     ThirdPartyplanned = 0
-    global ThirdParty
-    global ICO
-    global Travel
+    Travel = 0
+    ICO = 0
+    ThirdParty = 0
+    for i in actualsjson:
+        try:
+            if i['CostCenter']['DeliveryUnit']['DU'] == del_unit:
+                Actuallist.append(i)
+        except KeyError:
+            pass
+
+    for x in Actuallist:
+        if x['CostGroups'][0]['CostGroup'] == '3rd Party':
+            ThirdParty += math.floor(x['Budget_Actuals'])
+
+    for k in Actuallist:
+        if k['CostGroups'][0]['CostGroup'] == 'Travel':
+            Travel += math.floor(x['Budget_Actuals'])
+
+    for l in Actuallist:
+        if l['CostGroups'][0]['CostGroup'] == 'ICO':
+            ICO += math.floor(x['Budget_Actuals'])
 
     for m in plannedjson:
         try:
@@ -90,10 +114,10 @@ def index2():
     global del_unit
     global CCDict
     global Node
+    name = data['conversation']['memory']['person']['fullname']
     date = data['conversation']['memory']['date']['value'].lower()
     CostType = data['conversation']['memory']['cost_group']['raw']
     userid = data['conversation']['memory']['userid']['value']
-    name = data['conversation']['memory']['person']['fullname']
     CCname = data['conversation']['memory']['costcenter']['raw']
     headers = {'content-type': 'application/json'}
     CostGroup = data['conversation']['memory']['cost_type']['raw']
@@ -145,6 +169,21 @@ def index2():
             "Email": "string"
         }
     }
+    planned = requests.get(
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', timeout=15)
+
+    plannedjson = json.loads(planned.text)
+    for i in plannedjson:
+        try:
+            if i['Resource']['UserID'] == str(userid):
+                name = i['Resource']['Name']
+                if Node == i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node']:
+                    if CostGroup == i['CostType']['CostType']:
+                        if CCname == i['CostCenter']['Name']:
+                            payload = i
+
+        except KeyError:
+            pass
 
     if date == 'q1':
         payload['Jan'] = int(cost/3)
@@ -166,7 +205,7 @@ def index2():
         payload[date.title()[:3]] = cost
     payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['OU'] = Org_unit
     payload['Resource']['Name'] = name.title()
-    payload['Resource']['UserID'] = userid.title()
+    payload['Resource']['UserID'] = str(userid.title())
     payload['CostCenter']['DeliveryUnit']['DU'] = del_unit
     payload['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node'] = Node
     payload['CostGroup']['CostGroup'] = CostType
@@ -179,7 +218,7 @@ def index2():
         status=200,
         replies=[{
             'type': 'text',
-            'content': 'Success!'
+            'content': str(payload)
         }],
         conversation={
             'memory': {'key': 'value'}
@@ -197,7 +236,18 @@ def DU():
     data = (json.loads(request.get_data()))
     global Node
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
-    cost = int(data['conversation']['memory']['money']['amount'])
+    amount = int(data['conversation']['memory']['money']['scalar'])
+    currency = data['conversation']['memory']['currency']['raw']
+
+    centralbank = requests.get(
+        'https://api.exchangeratesapi.io/latest?base=EUR', timeout=15)
+
+    centralbankrates = json.loads(centralbank.text)
+    if currency == 'EUR':
+        cost = amount
+    else:
+        exchange = centralbankrates['rates'][currency]
+        cost = int(round((amount/exchange)))
 
     actuals = requests.get(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
