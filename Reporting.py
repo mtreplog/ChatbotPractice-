@@ -15,6 +15,7 @@ CCDict = {}
 Travel = 0
 ICO = 0
 ThirdParty = 0
+ReportingJSON = ''
 
 
 @app.route('/mike', methods=['POST'])
@@ -114,6 +115,8 @@ def index2():
     global del_unit
     global CCDict
     global Node
+    count = 0
+    postrequest = False
     name = data['conversation']['memory']['person']['fullname']
     date = data['conversation']['memory']['date']['value'].lower()
     CostType = data['conversation']['memory']['cost_group']['raw']
@@ -174,16 +177,21 @@ def index2():
 
     plannedjson = json.loads(planned.text)
     for i in plannedjson:
+        count += 1
         try:
-            if i['Resource']['UserID'] == str(userid):
-                name = i['Resource']['Name']
+            if i['Resource']['UserID'] == str(userid.title()):
                 if Node == i['CostCenter']['DeliveryUnit']['OrganizationalUnit']['Node']:
                     if CostGroup == i['CostType']['CostType']:
-                        if CCname == i['CostCenter']['Name']:
-                            payload = i
-
+                        if CCDict[CCname] == i['CostCenter']['CCID']:
+                            if CostType == i['CostGroup']['CostGroup']:
+                                payload = i
+                                postrequest = True
         except KeyError:
             pass
+    if postrequest:
+        print('Stop it')
+        requests.delete(
+            'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning?UserID={}&CostCenter={}&CostGroup={}&CostType={}'.format(str(userid).title(), CCDict[CCname], CostType, CostGroup), headers=headers)
 
     if date == 'q1':
         payload['Jan'] = int(cost/3)
@@ -212,6 +220,7 @@ def index2():
     payload['CostCenter']['CCID'] = CCDict[CCname]
     payload['CostCenter']['Name'] = CCname
     payload['CostType']['CostType'] = CostGroup
+
     post = requests.post(
         'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning', json=payload, headers=headers)
     return jsonify(
@@ -250,7 +259,7 @@ def DU():
         cost = int(round((amount/exchange)))
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning')
     final = json.loads(actuals.text)
 
     for i in final:
@@ -432,7 +441,7 @@ def DU1():
     Org_unit = str(data['conversation']['memory']['org_unit']['raw'])
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning')
     final = json.loads(actuals.text)
 
     for i in final:
@@ -610,7 +619,7 @@ def costcenter():
     count = 0
 
     actuals = requests.get(
-        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restactuals/v1/GetActuals')
+        'https://cost-center-management-production2.cfapps.eu10.hana.ondemand.com/rest/restplanning/v1/Planning')
     final = json.loads(actuals.text)
 
     for i in final:
